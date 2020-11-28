@@ -108,6 +108,41 @@ export function jsonPatchMutationsSupplier(): JsonPatchMutationsSupplier {
   };
 }
 
+export interface AnchoredJsonMutationsSupplier
+  extends JsonPatchMutationsSupplier {
+  readonly anchor: (path: JsonPointer) => JsonPointer;
+}
+
+export function jsonPatchAnchoredMutationsSupplier(
+  jpms: JsonPatchMutationsSupplier,
+  anchor: (path: JsonPointer) => JsonPointer,
+): AnchoredJsonMutationsSupplier {
+  const patchOps: JsonPatchOps = [];
+  return {
+    anchor: anchor,
+    addValue: <V>(path: JsonPointer, value: V): JsonPatchAddOp<V> => {
+      return jpms.addValue(anchor(path), value);
+    },
+    replaceValue: <V>(
+      path: JsonPointer,
+      value: V,
+    ): JsonPatchReplaceOp<V> => {
+      return jpms.replaceValue(anchor(path), value);
+    },
+    removeValues: (...paths: JsonPointer[]): JsonPatchRemoveOp[] => {
+      const removes = [];
+      for (const path of paths) {
+        removes.push(jpms.removeValue(anchor(path)));
+      }
+      return removes;
+    },
+    removeValue: (path: JsonPointer): JsonPatchRemoveOp => {
+      return jpms.removeValue(anchor(path));
+    },
+    patchOps: jpms.patchOps,
+  };
+}
+
 export interface JsonPatchMutationResult<T> extends JsonMutationResult<T> {
   readonly patchOps: JsonPatchOps;
 }

@@ -68,21 +68,27 @@ Deno.test(`remove JSON values`, () => {
       index: number,
       parent: mod.JsonPointer,
     ): mod.JsonPatchOp | mod.JsonPatchOps | undefined => {
+      const anchoredMutations = mod.jsonPatchAnchoredMutationsSupplier(
+        mutations,
+        (path: mod.JsonPointer): mod.JsonPointer => {
+          return `${parent}/${index}/${path}`;
+        },
+      );
       if (["Q002", "Q005"].find((q) => q == item.questionCode)) {
         const removeValues = [
-          `${parent}/${index}/codingInstructions`,
-          `${parent}/${index}/copyrightNotice`,
-          `${parent}/${index}/dataType`,
-          `${parent}/${index}/units`,
+          `codingInstructions`,
+          `copyrightNotice`,
+          `dataType`,
+          `units`,
         ];
-        return mutations.removeValues(...removeValues);
+        return anchoredMutations.removeValues(...removeValues);
       }
       if (["Q006"].find((q) => q == item.questionCode)) {
         const removeValues = [
-          `${parent}/${index}/dataType`,
-          `${parent}/${index}/hideUnits`,
+          `dataType`,
+          `hideUnits`,
         ];
-        return mutations.removeValues(...removeValues);
+        return anchoredMutations.removeValues(...removeValues);
       }
       return undefined;
     },
